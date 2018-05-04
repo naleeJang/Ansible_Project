@@ -1,0 +1,8 @@
+[tower]
+localhost
+
+[cobbler]
+192.168.122.120
+
+[cobbler:vars]
+romote_user=root

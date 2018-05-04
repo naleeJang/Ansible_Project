@@ -1,0 +1,77 @@
+---
+
+- name: create iso directory
+  file: path=~/iso state=directory
+
+
+- name: download an ISO Image
+  get_url: 
+    url: "{{ item.url }}" 
+    dest: "{{ item.file }}"
+  with_items:
+    - "{{ distros }}"
+
+
+- name: check distro exists in cobbler
+  shell: "cobbler distro report --name={{ item.name | quote }} > /dev/null"
+  ignore_errors: yes
+  changed_when: no
+  register: distro_result
+  when: distros is defined
+  with_items:
+    - "{{ distros }}"
+
+
+- name: create directory for mount
+  file: path={{ item.path }} state=directory
+  with_items:
+    - "{{ distros }}"
+  when: distros is defined and distro_result is failed
+
+
+- name: mount downlaod ISO Image
+  mount:
+    path: "{{ item.path }}"
+    src: "{{ item.file }}"
+    fstype: iso9660
+    opts: ro
+    state: mounted
+  with_items:
+    - "{{ distros }}"
+  when: distros is defined and distro_result is failed
+
+
+- name: import distro to cobbler
+  shell: cobbler import --path={{ item.path | quote }} --name={{ item.name | quote }} --arch={{ item.arch | quote }} --kickstart={{ item.kickstart | quote }}
+  with_items:
+    - "{{ distros }}"
+  when: distros is defined and distro_result is failed
+
+
+- name: check system exists in cobbler
+  shell: "cobbler system report --name={{ item.name | quote }} > /dev/null"
+  ignore_errors: yes
+  changed_when: no
+  register: system_result
+  when: distros is defined
+  with_items:
+    - "{{ distros }}"
+
+
+- name: add system to cobbler
+  shell: "cobbler system add --name={{ item.name | quote }} --profile={{ item.name | quote }}"
+  with_items:
+    - "{{ system }}"
+  when: distros is defined and system_result is failed
+
+
+- name: umount download ISO Image
+  mount:
+    path: "{{ item.path }}"
+    src: "{{ item.file }}"
+    fstype: iso9660
+    opts: ro
+    state: unmounted
+  with_items:
+    - "{{ distros }}"
+  when: distros is defined

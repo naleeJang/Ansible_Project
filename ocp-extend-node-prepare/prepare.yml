@@ -1,0 +1,6 @@
+---
+
+- name: Extend OCP NODE for Preparing
+  hosts: ocp
+  roles:
+    - prepare-ocp

@@ -1,0 +1,6 @@
+---
+
+- name: Clean the Cobbler ISO Image 
+  hosts: cobbler
+  roles:
+    - cobbler-removeISO

@@ -1,0 +1,7 @@
+---
+# cobbler distros iso
+distros: 
+  - { name: rhel-server-7.4-x86_64, arch: x86_64, url: 'http://192.168.122.1/rhel-server-7.4-x86_64-dvd.iso', file: /root/iso/rhel-server-7.4-x86_64-dvd.iso, path: /root/iso/rhel-server-7.4-x86_64-dvd/, kickstart: /var/lib/cobbler/kickstarts/sample.ks }
+
+system:
+  - { name: rhel-server-7.4-x86_64, arch: x86_64 }

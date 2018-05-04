@@ -1,0 +1,16 @@
+---
+
+- name: remove system 
+  shell: cobbler system remove --name={{ item.name | quote }}
+  with_items:
+    - "{{ system }}"
+
+- name: remove profile
+  shell: cobbler profile remove --name={{ item.name | quote }}
+  with_items:
+    - "{{ distros }}"
+
+- name: remove distro
+  shell: cobbler distro remove --name={{ item.name | quote }}
+  with_items:
+    - "{{ distros }}"

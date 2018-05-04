@@ -1,0 +1,61 @@
+---
+
+- name: Set Hostname
+  shell: hostnamectl set-hostname "{{ ocp_hostname }}"
+
+- name: Check Hostname
+  command: hostname
+  register: hostname_result
+
+- debug: var=hostname_result
+
+- name: Create ssh diectory
+  file:
+    path: "~/.ssh"
+    state: directory 
+
+- name: Copy ssh key
+  template: 
+    src: id-rsa-pub.template
+    dest: ~/.ssh/authorized_keys
+
+- name: Copy repo
+  template: src=ocp-repo.template dest=/etc/yum.repos.d/ocp.repo
+
+- name: OS Update
+  yum:
+    name: '*'
+    state: latest
+
+- name: Check for reboot hint
+  shell: LAST_KERNEL=$(rpm -q --last kernel | awk 'NR==1{sub(/kernel-/,""); print $1}'); CURRENT_KERNEL=$(uname -r); if [ $LAST_KERNEL != $CURRENT_KERNEL ]; then echo 'reboot'; else echo 'no'; fi
+  ignore_errors: true
+  register: reboot_hint
+
+- debug: var=reboot_hint
+
+- name: Reboot system
+  shell: sleep 2 && /sbin/reboot
+  async: 1
+  poll: 0
+  ignore_errors: true 
+  when: reboot_hint.stdout.find("reboot") != -1
+
+- name: waiting for the server to come back
+  local_action: wait_for 
+  args:
+    host: "{{ ansible_ssh_host }}"
+    state: started 
+    port: 22 
+    delay: 30 
+    timeout: 300
+  when: reboot_hint.stdout.find("reboot") != -1
+
+- name: Install Base Packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - git
+    - net-tools
+

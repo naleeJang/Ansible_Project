@@ -1,0 +1,6 @@
+---
+
+- name: Importing First Distribution
+  hosts: cobbler
+  roles:
+    - cobbler-addISO
